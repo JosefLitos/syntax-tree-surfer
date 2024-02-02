@@ -327,7 +327,7 @@ vim.api.nvim_create_user_command("STSSwapPrevVisual", function()
 	M.surf("prev", "visual", true)
 end, {}) --}}}
 
--- Global Variables for Normal Swap Dot Repeat{{{
+-- Normal Swap Dot Repeat{{{
 M.STSSwapCurrentNodePrevNormal_Dot = function()
 	vim.cmd("STSSwapCurrentNodePrevNormal")
 end
