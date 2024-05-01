@@ -603,6 +603,83 @@ local function has_value(tab, val) --{{{
 	return false
 end --}}}
 
+function M.fzf_jump(targets, opts)
+	opts = vim.tbl_extend('force', {jump_to_end=false, add_to_qf = false}, opts or {})
+	current_desired_types = targets
+	local nodes = get_desired_nodes(get_nodes_in_array(), targets)
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+	local ansi = require'fzf-lua.utils'.ansi_codes
+	local indent = string.rep(' ', vim.bo.ts)
+
+	local function producer(fzf_cb)
+    coroutine.wrap(function()
+      local co = coroutine.running()
+			for i, node in ipairs(nodes) do
+				local start_row, start_col, end_row, end_col = node:range()
+				start_row, end_row = start_row + 1, end_row + 1
+				fzf_cb(table.concat({
+					tostring(i),
+					ansi.magenta(node:type()),
+					ansi.green(tostring(opts.jump_to_end and end_row or start_row)),
+					ansi.green(tostring(opts.jump_to_end and end_col or start_col)),
+					lines[start_row]:gsub('^\t', indent),
+				}, ':'), function() coroutine.resume(co) end)
+				coroutine.yield()
+			end
+      fzf_cb(nil)
+    end)()
+	end
+
+	local function entry_to_num(entry)
+		local line, col = entry:match ':([0-9]+):([0-9]+):'
+		return tonumber(line), tonumber(col)
+	end
+
+	local previewer = require'fzf-lua.previewer.builtin'.buffer_or_file:extend()
+	local prev_entry = {bufnr=vim.api.nvim_get_current_buf(),path = vim.api.nvim_buf_get_name(0)}
+	function previewer:new(o, opts, fzf_win)
+    previewer.super.new(self, o, opts, fzf_win)
+    setmetatable(self, previewer)
+    return self
+	end
+	function previewer:parse_entry(str)
+		local line, col = entry_to_num(str)
+		prev_entry.line = line
+		prev_entry.col = col+1
+		return prev_entry
+	end
+
+	local fzf = require'fzf-lua'
+	fzf.fzf_exec(producer,{
+		fzf_opts = {
+      ["--multi"]     = true,
+      ["--delimiter"] = ":",
+      ["--nth"]  = "4..",
+		},
+		prompt = 'Choose node> ',
+		prompt_postfix = '> ',
+		actions = {default = function(res)
+			vim.api.nvim_win_set_cursor(0, {entry_to_num(res[1])})
+			if #res == 1 then return end
+			local qf = {}
+			for _, v in ipairs(res) do
+				local node = nodes[tonumber(v:match'^[0-9]+')]
+				local start_row, start_col, end_row, end_col = node:range()
+				qf[#qf+1] = {
+					bufnr=prev_entry.bufnr,
+					module = node:type(),
+					lnum = start_row+1,
+					end_lnum = end_row+1,
+					col= start_col+1,
+					end_col= end_col+1,
+					text=lines[start_row+1]:gsub('^\t', indent),
+				}
+			end
+			vim.fn.setqflist(qf, 'r')
+		end},
+		previewer = previewer,
+	})
+end
 -- Functions to Execute --
 local function print_types(desired_types) -- {{{
 	vim.cmd("m'")
