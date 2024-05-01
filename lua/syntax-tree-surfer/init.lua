@@ -617,12 +617,13 @@ function M.fzf_jump(targets, opts)
 			for i, node in ipairs(nodes) do
 				local start_row, start_col, end_row, end_col = node:range()
 				start_row, end_row = start_row + 1, end_row + 1
+				local text = lines[start_row]:gsub('^\t', indent)
 				fzf_cb(table.concat({
 					tostring(i),
 					ansi.magenta(node:type()),
 					ansi.green(tostring(opts.jump_to_end and end_row or start_row)),
 					ansi.green(tostring(opts.jump_to_end and end_col or start_col)),
-					lines[start_row]:gsub('^\t', indent),
+					text
 				}, ':'), function() coroutine.resume(co) end)
 				coroutine.yield()
 			end
