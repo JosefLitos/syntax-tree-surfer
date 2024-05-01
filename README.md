@@ -53,21 +53,21 @@ local opts = {noremap = true, silent = true}
 -- Normal Mode Swapping:
 -- Swap The Master Node relative to the cursor with it's siblings, Dot Repeatable
 vim.keymap.set("n", "vU", function()
-	vim.opt.opfunc = "v:lua.STSSwapUpNormal_Dot"
+	vim.opt.opfunc = "v:lua.require'syntax-tree-surfer'.STSSwapUpNormal_Dot"
 	return "g@l"
 end, { silent = true, expr = true })
 vim.keymap.set("n", "vD", function()
-	vim.opt.opfunc = "v:lua.STSSwapDownNormal_Dot"
+	vim.opt.opfunc = "v:lua.require'syntax-tree-surfer'.STSSwapDownNormal_Dot"
 	return "g@l"
 end, { silent = true, expr = true })
 
 -- Swap Current Node at the Cursor with it's siblings, Dot Repeatable
 vim.keymap.set("n", "vd", function()
-	vim.opt.opfunc = "v:lua.STSSwapCurrentNodeNextNormal_Dot"
+	vim.opt.opfunc = "v:lua.require'syntax-tree-surfer'.STSSwapCurrentNodeNextNormal_Dot"
 	return "g@l"
 end, { silent = true, expr = true })
 vim.keymap.set("n", "vu", function()
-	vim.opt.opfunc = "v:lua.STSSwapCurrentNodePrevNormal_Dot"
+	vim.opt.opfunc = "v:lua.require'syntax-tree-surfer'.STSSwapCurrentNodePrevNormal_Dot"
 	return "g@l"
 end, { silent = true, expr = true })
 
